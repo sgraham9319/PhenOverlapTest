@@ -13,7 +13,7 @@ chaut <- chaut.dat[chaut.dat$OrdinalDate >= 152 &
                      chaut.dat$OrdinalDate <= 259, ]
 
 # Subset to adults
-chaut <- chaut[which(!is.na(chaut$Stage6)),]
+chaut <- droplevels(chaut[which(!is.na(chaut$Stage6)),])
 
 # Find out which species had more than 50 adults sampled
 x <- tapply(chaut$Stage6, chaut$Species, FUN = sum)
@@ -21,8 +21,7 @@ x1 <- x[!is.na(x) & x > 50]
 names(x1)
 
 # Subset data to these common species
-chaut <- chaut[chaut$Species %in% names(x1),]
-chaut <- droplevels(chaut)
+chaut <- droplevels(chaut[chaut$Species %in% names(x1),])
 table(chaut$Species)
 
 #############################
@@ -32,45 +31,55 @@ table(chaut$Species)
 # Subset to 1 year
 chaut <- chaut[chaut$year == 2008, ]
 
-# Find all species combinations
-sp.combs <- combn(unique(chaut$Species), m = 2)
-ncol(sp.combs)
+########################
+# Combinations both ways
+########################
 
-results <- rep(NA, times = ncol(sp.combs))
+unique(chaut$Species)
+sps <- sort(unique(chaut$Species))
+sps[3]
 
-for(com in 1:ncol(sp.combs)) {
-  # Subset to the 2 species of interest
-  dat <- chaut[chaut$Species == sp.combs[1, com] | chaut$Species == sp.combs[2, com], ]
+results <- matrix(nrow = length(sps), ncol = length(sps))
+colnames(results) <- sps
+rownames(results) <- sps
+
+for(sp1 in 1:length(sps)) {
   # Find ordinal dates when focal species present
-  dates <- dat[dat$Species == sp.combs[1, com] & dat$Stage6 > 0, "OrdinalDate"]
+  dates <- chaut[chaut$Species == sps[sp1] & chaut$Stage6 > 0, "OrdinalDate"]
   # Subset to these dates
-  dat <- dat[dat$OrdinalDate %in% dates,]
-  
+  dat <- chaut[chaut$OrdinalDate %in% dates,]
+  # Calculate total number adults of focal species in year
+  tot.sp1 <- tapply(dat$Stage6, dat$Species, FUN = sum)[sps[sp1]]
   # Create empty vector for overlap by ordinal date
   measures <- rep(NA, times = length(dates))
-  # Calculate total number adults of focal species in year
-  tot.sp1 <- tapply(dat$Stage6, dat$Species, FUN = sum)[sp.combs[1, com]]
   
-  # Loop through dates, calculating overlap for each one
-  for (i in 1:length(dates)) {
-    # Extract number of adults for focal species
-    sp1 <- dat[dat$OrdinalDate == dates[i] & dat$Species == sp.combs[1, com],
-                 "Stage6"]
-    # Extract number of adults for competitor species
-    sp2 <- dat[dat$OrdinalDate == dates[i] & dat$Species == sp.combs[2, com],
-                 "Stage6"]
-    # Check for a row representing competitor species on this date
-    if(length(sp2) == 0){
-      # If no row, make number of competitors zero
-      sp2 <- 0
+  # Loop through each competitor species
+  for(comp in 1:length(sps)) {
+    if(comp != sp1) {
+      # Subset to the 2 species of interest
+      dat1 <- dat[dat$Species == sps[sp1] | dat$Species == sps[comp], ]
+      
+      # Loop through dates, calculating overlap for each one
+      for (ord in 1:length(dates)) {
+        # Extract number of adults for focal species
+        focal <- dat1[dat1$OrdinalDate == dates[ord] & dat1$Species == sps[sp1],
+                   "Stage6"]
+        # Extract number of adults for competitor species
+        competitor <- dat1[dat1$OrdinalDate == dates[ord] & dat1$Species == sps[comp],
+                   "Stage6"]
+        # Check for a row representing competitor species on this date
+        if(length(competitor) == 0){
+          # If no row, make number of competitors zero
+          competitor <- 0
+        }
+        # Calculate ratio
+        ratio <- competitor/focal
+        # Weight the ratio by the proportion of focal adults for the year that
+        # were sampled on this date
+        measures[ord] <- ratio*(focal/tot.sp1)
+      }
+      # Take weighted mean of overlap measures as measure of phenological overlap
+      results[sp1, comp] <- sum(measures)
     }
-    # Calculate ratio
-    ratio <- sp2/sp1
-    # Weight the ratio by the proportion of focal adults for the year that
-    # were sampled on this date
-    measures[i] <- ratio*(sp1/tot.sp1)
   }
-  # Take weighted mean of overlap measures as measure of phenological overlap
-  results[com] <- sum(measures)
 }
-results
