@@ -3,7 +3,7 @@
 ##################################
 
 # Load data
-chaut.dat <- read.csv("Chautdata.csv")
+chaut.dat <- read.csv("../Chautdata.csv")
 
 # Check for mispelled species names
 table(chaut.dat$Species)
@@ -36,30 +36,41 @@ chaut <- chaut[chaut$year == 2008, ]
 sp.combs <- combn(unique(chaut$Species), m = 2)
 ncol(sp.combs)
 
-# First try calculation with just one species pair (column 10 in sp.combs)
+results <- rep(NA, times = ncol(sp.combs))
 
-# Subset to the 2 species of interest
-chaut <- chaut[chaut$Species == "Melanoplus dawsoni" | 
-                 chaut$Species == "Melanoplus sanguinipes", ]
-# Find ordinal dates when focal species present
-dates <- chaut[chaut$Species == "Melanoplus dawsoni" & chaut$Stage6 > 0, 
-               "OrdinalDate"]
-
-# Subset to these dates
-chaut <- chaut[chaut$OrdinalDate %in% dates,]
-
-measures <- rep(NA, times = length(dates))
-tot.sp1 <- tapply(chaut$Stage6, chaut$Species, FUN = sum)["Melanoplus dawsoni"]
-for (i in 1:length(dates)) {
-  sp1 <- chaut[chaut$OrdinalDate == dates[3] & chaut$Species == "Melanoplus dawsoni",
-               "Stage6"]
-  sp2 <- chaut[chaut$OrdinalDate == dates[3] & chaut$Species == "Melanoplus sanguinipes",
-               "Stage6"]
-  if(length(sp2) == 0){
-    sp2 <- 0
+for(com in 1:ncol(sp.combs)) {
+  # Subset to the 2 species of interest
+  dat <- chaut[chaut$Species == sp.combs[1, com] | chaut$Species == sp.combs[2, com], ]
+  # Find ordinal dates when focal species present
+  dates <- dat[dat$Species == sp.combs[1, com] & dat$Stage6 > 0, "OrdinalDate"]
+  # Subset to these dates
+  dat <- dat[dat$OrdinalDate %in% dates,]
+  
+  # Create empty vector for overlap by ordinal date
+  measures <- rep(NA, times = length(dates))
+  # Calculate total number adults of focal species in year
+  tot.sp1 <- tapply(dat$Stage6, dat$Species, FUN = sum)[sp.combs[1, com]]
+  
+  # Loop through dates, calculating overlap for each one
+  for (i in 1:length(dates)) {
+    # Extract number of adults for focal species
+    sp1 <- dat[dat$OrdinalDate == dates[i] & dat$Species == sp.combs[1, com],
+                 "Stage6"]
+    # Extract number of adults for competitor species
+    sp2 <- dat[dat$OrdinalDate == dates[i] & dat$Species == sp.combs[2, com],
+                 "Stage6"]
+    # Check for a row representing competitor species on this date
+    if(length(sp2) == 0){
+      # If no row, make number of competitors zero
+      sp2 <- 0
+    }
+    # Calculate ratio
+    ratio <- sp2/sp1
+    # Weight the ratio by the proportion of focal adults for the year that
+    # were sampled on this date
+    measures[i] <- ratio*(sp1/tot.sp1)
   }
-  ratio <- sp2/sp1
-  measures[3] <- ratio*(sp1/tot.sp1)
+  # Take weighted mean of overlap measures as measure of phenological overlap
+  results[com] <- sum(measures)
 }
-phenOver <- sum(measures)
-phenOver
+results
