@@ -2,21 +2,57 @@
 # Quantifying phenological overlap
 ##################################
 
-# Load data
-chaut.dat <- read.csv("../Chautdata.csv")
+# Load grasshopper sampling datasets
+chaut <- read.csv("../Chautdata.csv")
+a1 <- read.csv("../A1data.csv")
+b1 <- read.csv("../B1data.csv")
+c1 <- read.csv("../C1data.csv")
+
+###############
+# Cleaning data
+###############
+
+# Remove unwanted column from B1.dat
+unwanted.col <- which(names(B1.dat) == "Genu_spec")
+B1.dat <- B1.dat[,-unwanted.col]
 
 # Check for mispelled species names
-table(chaut.dat$Species)
+all.dat <- rbind(chaut.dat, A1.dat, B1.dat, C1.dat)
+sort(unique(as.character(all.dat$Species)))
 
-# Restrict ordinal date to 6/1 to 9/16
-chaut <- chaut.dat[chaut.dat$OrdinalDate >= 152 &
-                     chaut.dat$OrdinalDate <= 259, ]
+# Correct mistakes in species names
+all.dat$Species <- gsub(" $", "", all.dat$Species) # Remove any spaces accidentally
+                                                   # added at end of species names
+all.dat$Species <- sub("Cratypedes neglectus", "Cratypledes neglectus", all.dat$Species)
+all.dat$Species <- sub("Melanoplus bivitattus", "Melanoplus bivatattus", all.dat$Species)
+all.dat$Species <- sub("Melanoplus bivattatus", "Melanoplus bivatattus", all.dat$Species)
+all.dat$Species <- sub("Melanoplus bivittatus", "Melanoplus bivatattus", all.dat$Species)
+
+# Check that all mistakes are corrected
+sort(unique(as.character(all.dat$Species)))
+
+# Restrict ordinal date to June 1st to September 16th
+all.dat <- all.dat[all.dat$OrdinalDate >= 152 &
+                     all.dat$OrdinalDate <= 259, ]
 
 # Subset to adults
-chaut <- droplevels(chaut[which(!is.na(chaut$Stage6)),])
+all.dat <- all.dat[which(!is.na(all.dat$Stage6)),]
+
+# Split data by site for analysis
+a1 <- all.dat[all.dat$Site == "A1",]
+b1 <- all.dat[all.dat$Site == "B1",]
+c1 <- all.dat[all.dat$Site == "C1",]
+chaut <- all.dat[all.dat$Site == "Chaut",]
+
+##############################################################
+# Calculating phenological overlap for all years within a site
+##############################################################
+
+# Select dataset
+dat <- a1
 
 # Find out which species had more than 50 adults sampled
-x <- tapply(chaut$Stage6, chaut$Species, FUN = sum)
+x <- tapply(dat$Stage6, dat$Species, FUN = sum)
 x1 <- x[!is.na(x) & x > 50]
 names(x1)
 
@@ -24,24 +60,20 @@ names(x1)
 chaut <- droplevels(chaut[chaut$Species %in% names(x1),])
 table(chaut$Species)
 
-############################################################
-# Calculating phenological overlap for all years within site
-############################################################
-
 # Create vector of years included in sampling
-years <- unique(chaut$year)
+years <- unique(dat$year)
 
 # Create vector of species names in alphabetical order
-sps <- sort(unique(chaut$Species))
+sps <- sort(unique(dat$Species))
 
 # Create an array with a cell for each species combination in each year
 results <- array(dim = c(length(sps), length(sps), length(years)), 
                  dimnames = list(sps, sps, years))
 
-
+# Loop through the years
 for(year in 1:length(years)) {
   # Subset to 1 year
-  sub.year <- chaut[chaut$year == years[year], ]
+  sub.year <- dat[dat$year == years[year], ]
   
   # Loop through the focal species (sp1)
   for(sp1 in 1:length(sps)) {
@@ -84,8 +116,8 @@ for(year in 1:length(years)) {
         }
         # Sum measures of overlap to obtain weighted mean and add to results matrix
         results[sp1, sp2, year] <- sum(measures)
-      }
-    }
-  }
-}
+      } # Close if statement loop
+    } # Close competitor species loop
+  } # Close focal species loop
+} # Close years loop
 
