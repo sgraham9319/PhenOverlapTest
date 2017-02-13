@@ -13,11 +13,11 @@ c1 <- read.csv("../C1data.csv")
 ###############
 
 # Remove unwanted column from B1.dat
-unwanted.col <- which(names(B1.dat) == "Genu_spec")
-B1.dat <- B1.dat[,-unwanted.col]
+unwanted.col <- which(names(b1) == "Genu_spec")
+b1 <- b1[,-unwanted.col]
 
 # Check for mispelled species names
-all.dat <- rbind(chaut.dat, A1.dat, B1.dat, C1.dat)
+all.dat <- rbind(chaut, a1, b1, c1)
 sort(unique(as.character(all.dat$Species)))
 
 # Correct mistakes in species names
@@ -49,7 +49,7 @@ chaut <- all.dat[all.dat$Site == "Chaut",]
 ##############################################################
 
 # Select dataset
-dat <- a1
+dat <- chaut
 
 # Find out which species had more than 50 adults sampled
 x <- tapply(dat$Stage6, dat$Species, FUN = sum)
@@ -57,8 +57,8 @@ x1 <- x[!is.na(x) & x > 50]
 names(x1)
 
 # Subset data to these common species
-chaut <- droplevels(chaut[chaut$Species %in% names(x1),])
-table(chaut$Species)
+dat <- droplevels(dat[dat$Species %in% names(x1),])
+table(dat$Species)
 
 # Create vector of years included in sampling
 years <- unique(dat$year)
