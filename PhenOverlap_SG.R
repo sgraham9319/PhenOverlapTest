@@ -55,16 +55,7 @@ chaut <- all.dat[all.dat$Site == "Chaut",]
 ##############################################################
 
 # Select dataset
-dat <- c1
-
-# Find out which species had more than 50 adults sampled
-x <- tapply(dat$Stage6, dat$Species, FUN = sum)
-x1 <- x[!is.na(x) & x > 50]
-names(x1)
-
-# Subset data to these common species
-dat <- droplevels(dat[dat$Species %in% names(x1),])
-table(dat$Species)
+dat <- b1
 
 # Create vector of years included in sampling
 years <- unique(dat$year)
@@ -126,4 +117,52 @@ for(year in 1:length(years)) {
     } # Close competitor species loop
   } # Close focal species loop
 } # Close years loop
+
+
+############
+# Make plots
+############
+
+# Load GDD data
+chautGDD <- read.csv("../ChautauquaGDD.csv")
+a1GDD <- read.csv("../A1GDD.csv")
+b1GDD <- read.csv("../B1GDD.csv")
+c1GDD <- read.csv("../C1GDD.csv")
+
+# Define standard error function
+se <- function(x) {
+  sd(x, na.rm = TRUE)/sqrt(length(!is.na(x)))
+}
+
+# Calculate GDDs accumulated by September 16th (ordinal date = 259) for each year
+GDDs <- rep(NA, times = 5)
+years1 <- c("X1959", "X1960", "X2006", "X2007", "X2008")
+for(a in 1:length(years1)) {
+  GDDs[a] <- b1GDD[b1GDD$OrdinalDate == 259, years1[a]]
+}
+
+
+# All of species 1 as focal within a year
+Species <- row.names(results[,,1])
+Means <- apply(results[,,1], MARGIN = 1, FUN = se)
+SEs <- apply(results[,,1], MARGIN = 1, FUN = mean, na.rm = TRUE)
+upp <- Means + SEs
+low <- Means - SEs
+GDD <- rep(GDDs[1], times = length(low))
+plotData <- data.frame(Species, Means, SEs, upp, low, GDD)
+
+for(b in 2:5) {
+  Species <- row.names(results[,,b])
+  Means <- apply(results[,,b], MARGIN = 1, FUN = se)
+  SEs <- apply(results[,,b], MARGIN = 1, FUN = mean, na.rm = TRUE)
+  upp <- Means + SEs
+  low <- Means - SEs
+  GDD <- rep(GDDs[b], times = length(low))
+  newData <- data.frame(Species, Means, SEs, upp, low, GDD)
+  plotData <- rbind(plotData, newData)
+}
+View(plotData)
+
+plot(y = plotData$Means, x = plotData$GDD, xlab = "GDDs accumulated by 9/16",
+     ylab = "PhenOver", col = plotData$Species)
 
