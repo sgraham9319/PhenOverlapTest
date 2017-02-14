@@ -55,7 +55,7 @@ chaut <- all.dat[all.dat$Site == "Chaut",]
 ##############################################################
 
 # Select dataset
-dat <- b1
+dat <- chaut
 
 # Create vector of years included in sampling
 years <- unique(dat$year)
@@ -135,10 +135,11 @@ se <- function(x) {
 }
 
 # Calculate GDDs accumulated by September 16th (ordinal date = 259) for each year
-GDDs <- rep(NA, times = 5)
-years1 <- c("X1959", "X1960", "X2006", "X2007", "X2008")
+GDDs <- rep(NA, times = 4)
+#years1 <- c("X1959", "X1960", "X2006", "X2007", "X2008")
+years1 <- c("X1959", "X1960", "X2007", "X2008")
 for(a in 1:length(years1)) {
-  GDDs[a] <- b1GDD[b1GDD$OrdinalDate == 259, years1[a]]
+  GDDs[a] <- chautGDD[chautGDD$OrdinalDate == 259, years1[a]]
 }
 
 
@@ -151,7 +152,7 @@ low <- Means - SEs
 GDD <- rep(GDDs[1], times = length(low))
 plotData <- data.frame(Species, Means, SEs, upp, low, GDD)
 
-for(b in 2:5) {
+for(b in 2:4) {
   Species <- row.names(results[,,b])
   Means <- apply(results[,,b], MARGIN = 1, FUN = se)
   SEs <- apply(results[,,b], MARGIN = 1, FUN = mean, na.rm = TRUE)
@@ -164,5 +165,7 @@ for(b in 2:5) {
 View(plotData)
 
 plot(y = plotData$Means, x = plotData$GDD, xlab = "GDDs accumulated by 9/16",
-     ylab = "PhenOver", col = plotData$Species)
-
+     main = "Chautauqua site",
+     ylab = "PhenOver", col = 1:3, pch = 1:3)
+legend(x = "top", legend = row.names(results[,,1]), col = 1:3, 
+       cex = 0.8, pch = 1:3, bty = "n")
