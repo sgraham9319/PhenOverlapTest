@@ -38,6 +38,12 @@ all.dat <- all.dat[all.dat$OrdinalDate >= 152 &
 # Subset to adults
 all.dat <- all.dat[which(!is.na(all.dat$Stage6)),]
 
+# Subset to common species
+com.sp <- c("Camnula pellucida", "Melanoplus dawsoni", "Melanoplus sanguinipes", 
+            "Melanoplus dodgei", "Melanoplus bivatattus", "Melanoplus packardii",
+            "Melanoplus fasciatus")
+all.dat <- all.dat[all.dat$Species %in% com.sp, ]
+
 # Split data by site for analysis
 a1 <- all.dat[all.dat$Site == "A1",]
 b1 <- all.dat[all.dat$Site == "B1",]
@@ -49,7 +55,7 @@ chaut <- all.dat[all.dat$Site == "Chaut",]
 ##############################################################
 
 # Select dataset
-dat <- chaut
+dat <- c1
 
 # Find out which species had more than 50 adults sampled
 x <- tapply(dat$Stage6, dat$Species, FUN = sum)
