@@ -169,3 +169,25 @@ plot(y = plotData$Means, x = plotData$GDD, xlab = "GDDs accumulated by 9/16",
      ylab = "PhenOver", col = 1:3, pch = 1:3)
 legend(x = "top", legend = row.names(results[,,1]), col = 1:3, 
        cex = 0.8, pch = 1:3, bty = "n")
+
+
+######################################################
+# Determining whether species are early or late season
+######################################################
+
+# Select dataset
+dat <- b1
+
+# Create vector of years included in sampling
+years <- unique(dat$year)
+
+# Create vector of species names in alphabetical order
+sps <- sort(unique(dat$Species))
+
+for(i in 1:length(sps)) {
+  dat1 <- dat[dat$Species == sps[i], ]
+  plot(x = dat1$OrdinalDate, y = dat1$Stage6)
+}
+
+sps
+
