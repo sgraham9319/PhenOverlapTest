@@ -134,11 +134,11 @@ for(i in 2:length(years)){ # Loop through rest of tables in results
 Year <- rep(1:length(years), each = nrow(results[,,1]))
 
 # Create plot
-plot(x = Year, y = Overlap, pch = 1:length(Species), xaxt = "n")
+plot(x = Year, y = Overlap, pch = 1:length(sps), xaxt = "n")
 
 # Add years to x axis
-axis(side = 1, at = 1:length(years), labels = years)
-legend(x = "topleft", legend = Species, pch = 1:3, cex = 0.8)
+axis(side = 1, at = 1:length(years), labels = years, cex.axis = 0.8)
+legend(x = "top", legend = sps, pch = 1:3, cex = 0.7)
 
 
 ###################
