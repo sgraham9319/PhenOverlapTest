@@ -93,7 +93,7 @@ for(year in 1:length(years)) {
                             sub.dat$Species == sps[sp2], ]
         
         # Loop through dates, calculating overlap for each date
-        for (ord in 1:length(dates)) {
+        for(ord in 1:length(dates)) {
           # Extract number of adults for focal species
           focals <- sub.sp[sub.sp$OrdinalDate == dates[ord] & 
                              sub.sp$Species == sps[sp1], "Stage6"]
@@ -105,11 +105,11 @@ for(year in 1:length(years)) {
             # If no row exists make number of competitors zero
             competitors <- 0
           }
-          # Calculate ratio of competitors to focals
-          ratio <- competitors/focals
-          # Weight the ratio by the proportion of focal adults for the year that
-          # were present on this date
-          measures[ord] <- ratio*(focals/tot.sp1)
+          # Calculate product of competitors and focals
+          product <- competitors*focals
+          # Divide this product by the total number of focal adults sampled in the 
+          # season to make measures comparable between species of differing abundance
+          measures[ord] <- product/tot.sp1
         }
         # Sum measures of overlap to obtain weighted mean and add to results matrix
         results[sp1, sp2, year] <- sum(measures)
