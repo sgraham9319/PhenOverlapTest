@@ -119,9 +119,31 @@ for(year in 1:length(years)) {
 } # Close years loop
 
 
-############
-# Make plots
-############
+##########################################################################
+# Creating plots of total overlap experienced by each species in each year
+##########################################################################
+
+# Sum across rows of results tables to get total overlap for each species in
+# each year
+Overlap <- apply(results[,,1], MARGIN = 1, FUN = sum, na.rm = TRUE)
+for(i in 2:length(years)){ # Loop through rest of tables in results
+  Overlap <- c(Overlap, apply(results[,,i], MARGIN = 1, FUN = sum, na.rm = TRUE))
+}
+
+# Create vector of years that each overlap value corresponds to
+Year <- rep(1:length(years), each = nrow(results[,,1]))
+
+# Create plot
+plot(x = Year, y = Overlap, pch = 1:length(Species), xaxt = "n")
+
+# Add years to x axis
+axis(side = 1, at = 1:length(years), labels = years)
+legend(x = "topleft", legend = Species, pch = 1:3, cex = 0.8)
+
+
+###################
+# Old plotting code
+###################
 
 # Load GDD data
 chautGDD <- read.csv("../ChautauquaGDD.csv")
