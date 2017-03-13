@@ -55,7 +55,7 @@ chaut <- all.dat[all.dat$Site == "Chaut",]
 ##############################################################
 
 # Select dataset
-dat <- chaut
+dat <- c1
 
 # Create vector of years included in sampling
 years <- unique(dat$year)
@@ -138,7 +138,7 @@ plot(x = Year, y = Overlap, pch = 1:length(sps), xaxt = "n")
 
 # Add years to x axis
 axis(side = 1, at = 1:length(years), labels = years, cex.axis = 0.8)
-legend(x = "top", legend = sps, pch = 1:3, cex = 0.7)
+legend(x = "topright", legend = sps, pch = 1:length(sps), cex = 0.7)
 
 
 ###################
